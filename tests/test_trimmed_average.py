@@ -24,6 +24,7 @@ class DecodeInputLinesTests(unittest.TestCase):
         ]
         decoded = ta.decode_input_lines(lines)
         self.assertEqual(decoded, b"MT")
+        print("test_trimmed_average.test_decode_input_lines_strips_comments_and_padding passed")
 
 
 class TrimmedAverageTests(unittest.TestCase):
@@ -36,6 +37,7 @@ class TrimmedAverageTests(unittest.TestCase):
         self.assertEqual(index, 10)
         # lower trim = 1, upper trim = ceil(10%*10)=1 => drop 0 and 9 => mean of 1..8 = 4.5
         self.assertTrue(math.isclose(avg, 4.5))
+        print("test_trimmed_average.test_trimmed_average_handles_absolute_and_proportional_trimming passed")
 
     def test_parse_stream_reset_on_parameter_change(self):
         # window size 3, lower_abs changes from default 0 to 1 and implies reset
@@ -50,6 +52,7 @@ class TrimmedAverageTests(unittest.TestCase):
         self.assertTrue(outputs[0].endswith("2.000"))
         # after reset, index restarts at 3 for the second window
         self.assertTrue(outputs[1].startswith("      3"))
+        print("test_trimmed_average.test_parse_stream_reset_on_parameter_change passed")
 
     def test_parse_stream_matches_example_one(self):
         example_path = Path(__file__).resolve().parent.parent / "inputs" / "example-1.txt"
@@ -65,6 +68,7 @@ class TrimmedAverageTests(unittest.TestCase):
                 "      8: 0.550",
             ],
         )
+        print("test_trimmed_average.test_parse_stream_matches_example_one passed")
 
 
 if __name__ == "__main__":

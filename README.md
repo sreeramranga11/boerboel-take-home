@@ -27,3 +27,7 @@ python -m unittest tests.test_stream_coverage
 python -m unittest tests.test_formatting
 python -m unittest tests.test_examples_cache
 ```
+
+Each individual test method prints a short "passed" line after all of its assertions
+complete, so the command output doubles as a quick log confirming every check finished
+successfully.

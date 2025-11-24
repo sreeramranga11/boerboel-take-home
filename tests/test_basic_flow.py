@@ -21,6 +21,7 @@ class BasicFlowTests(unittest.TestCase):
         self.assertEqual(index, 2)
         # After trimming away the lowest of the two samples, only 6.0 is left.
         self.assertTrue(math.isclose(avg, 6.0))
+        print("test_basic_flow.test_handles_small_window_and_reset passed")
 
     def test_combines_abs_and_prop_trims(self):
         # Check the combined trim path with numbers that are easy to eyeball.
@@ -30,6 +31,7 @@ class BasicFlowTests(unittest.TestCase):
         _, avg = outputs[0]
         # lower_abs trims 1, upper_prop trims ceil(25% of 4) = 1, leaving 20 and 30 => average 25
         self.assertTrue(math.isclose(avg, 25.0))
+        print("test_basic_flow.test_combines_abs_and_prop_trims passed")
 
 
 if __name__ == "__main__":

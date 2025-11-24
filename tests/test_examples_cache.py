@@ -38,6 +38,7 @@ class ExampleCacheTests(unittest.TestCase):
         expected_lines = self.build_expected_lines("example-2.txt")
         self.assertEqual(stdout_lines, expected_lines)
         self.assertEqual(cached_lines, expected_lines)
+        print("test_examples_cache.test_example_two_matches_expected_and_caches passed")
 
     def test_example_three_matches_expected_and_caches(self):
         stdout_lines, cached_lines = self.run_example_and_collect("example-3.txt")
@@ -48,6 +49,7 @@ class ExampleCacheTests(unittest.TestCase):
         self.assertEqual(stdout_lines[:5], expected_lines[:5])
         self.assertEqual(stdout_lines[-5:], expected_lines[-5:])
         self.assertEqual(cached_lines, expected_lines)
+        print("test_examples_cache.test_example_three_matches_expected_and_caches passed")
 
 
 if __name__ == "__main__":

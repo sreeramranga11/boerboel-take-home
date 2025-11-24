@@ -14,6 +14,7 @@ class FormattingTests(unittest.TestCase):
         index, avg = outputs[0]
         self.assertTrue(math.isnan(avg))
         self.assertTrue(ta.format_output(index, avg).endswith("NaN"))
+        print("test_formatting.test_nan_output_when_trim_excludes_all passed")
 
     def test_cli_against_example(self):
         example_path = Path(__file__).resolve().parent.parent / "inputs" / "example-2.txt"
@@ -29,6 +30,7 @@ class FormattingTests(unittest.TestCase):
         self.assertTrue(output_lines)
         self.assertTrue(all(len(line.split(":")) == 2 for line in output_lines))
         self.assertTrue(all(line.split(":")[0].strip().isdigit() for line in output_lines))
+        print("test_formatting.test_cli_against_example passed")
 
 
 if __name__ == "__main__":

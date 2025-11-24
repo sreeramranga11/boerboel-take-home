@@ -18,6 +18,7 @@ class StreamCoverageTests(unittest.TestCase):
         raw = build_stream_with_opcode(0x01)
         with self.assertRaises(ValueError):
             ta.parse_stream(raw, ta.TrimState())
+        print("test_stream_coverage.test_truncated_stream_raises_value_error passed")
 
     def test_large_window_and_trim_combo(self):
         # Build a stream that mixes absolute and proportional trims to stretch logic paths.
@@ -40,6 +41,7 @@ class StreamCoverageTests(unittest.TestCase):
         index, avg_text = outputs[0].split(":")
         self.assertEqual(index.strip(), "6")
         self.assertTrue(math.isclose(float(avg_text.strip()), 35.0, rel_tol=1e-9))
+        print("test_stream_coverage.test_large_window_and_trim_combo passed")
 
     def test_main_via_subprocess_reports_nan_on_over_trim(self):
         # Feed a stream that over-trims so compute_trimmed_average returns NaN.
@@ -62,6 +64,7 @@ class StreamCoverageTests(unittest.TestCase):
         self.assertEqual(len(lines), 1)
         # Human-readable output should spell NaN, not numeric text.
         self.assertTrue(lines[0].endswith("NaN"))
+        print("test_stream_coverage.test_main_via_subprocess_reports_nan_on_over_trim passed")
 
 
 if __name__ == "__main__":
