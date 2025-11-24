@@ -202,40 +202,68 @@ def format_output(index: int, avg: float) -> str:
     return f"{index:7d}: {value_text}"
 
 
-def save_outputs(outputs: List[str]) -> Path:
-    """Persist the most recent run into the outputs directory.
+def _discover_input_name(stdin_text: str | None = None) -> str:
+    """Try a handful of platform-friendly tricks to name the cache file.
 
-    The caller does not need to pass the input file name; when stdin comes
-    from a redirected file we can discover it via /proc. If discovery fails,
-    we fall back to a generic "last-run" filename so there is always a cache
-    to inspect.
+    On Linux the `/proc` symlink will resolve when stdin is redirected from a file, but
+    macOS and some CI environments do not expose `/proc`. We fall back to `/dev/fd/0`
+    (common on macOS) and then to comparing the current stdin contents to any files in
+    the `inputs/` directory so example runs still produce example-matching cache names.
     """
+
+    candidate_paths = []
+
+    # First try whatever name Python knows about stdin when it is a file handle.
+    stdin_name = getattr(sys.stdin, "name", None)
+    if stdin_name and stdin_name not in {"<stdin>", "stdin"}:
+        candidate_paths.append(stdin_name)
+
+    # Then try the common file descriptor symlink locations.
+    for link in ("/proc/self/fd/0", "/dev/fd/0"):
+        try:
+            candidate_paths.append(os.readlink(link))
+        except OSError:
+            continue
+
+    for candidate in candidate_paths:
+        path = Path(candidate)
+        if path.exists() and path.is_file():
+            return path.stem or "last-run"
+
+    # If we could not resolve a path, try to match stdin against known example files.
+    if stdin_text is not None:
+        inputs_dir = Path("inputs")
+        for input_file in inputs_dir.glob("*.txt"):
+            try:
+                if input_file.read_text(encoding="utf-8") == stdin_text:
+                    return input_file.stem
+            except OSError:
+                # Keep looking; one bad file should not stop discovery.
+                continue
+
+    return "last-run"
+
+
+def save_outputs(outputs: List[str], stdin_text: str | None = None) -> Path:
+    """Persist the most recent run into the outputs directory with a best-effort name."""
 
     target_dir = Path("outputs")
     target_dir.mkdir(exist_ok=True)
 
-    try:
-        # When stdin is redirected from a real file we can resolve its path.
-        source_path = Path(os.readlink("/proc/self/fd/0"))
-        if source_path.exists() and source_path.is_file():
-            source_name = source_path.stem or "last-run"
-        else:
-            source_name = "last-run"
-    except OSError:
-        source_name = "last-run"
-
+    source_name = _discover_input_name(stdin_text)
     target_path = target_dir / f"{source_name}.out"
     target_path.write_text("\n".join(outputs) + "\n", encoding="utf-8")
     return target_path
 
 
 def main() -> None:
-    raw_stream = decode_input_lines(sys.stdin)
+    stdin_text = sys.stdin.read()
+    raw_stream = decode_input_lines(stdin_text.splitlines())
     state = TrimState()
     outputs = parse_stream(raw_stream, state)
     for line in outputs:
         print(line)
-    save_outputs(outputs)
+    save_outputs(outputs, stdin_text)
 
 
 if __name__ == "__main__":
