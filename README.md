@@ -7,9 +7,9 @@ segments, and prints each calculated trimmed average in the required format.
 ## Usage
 
 ```
-python trimmed_average.py < inputs/example-1.txt
-python trimmed_average.py < inputs/example-2.txt
-python trimmed_average.py < inputs/example-3.txt
+python3 trimmed_average.py < inputs/example-1.txt
+python3 trimmed_average.py < inputs/example-2.txt
+python3 trimmed_average.py < inputs/example-3.txt
 ```
 
 Each run prints results to the console and also caches them under `outputs/` using the
@@ -21,11 +21,11 @@ There is no single test runner script. Each test file can be run on its own so t
 commands stay obvious and human-sized:
 
 ```
-python -m unittest tests.test_basic_flow
-python -m unittest tests.test_trimmed_average
-python -m unittest tests.test_stream_coverage
-python -m unittest tests.test_formatting
-python -m unittest tests.test_examples_cache
+python3 -m unittest tests.test_basic_flow
+python3 -m unittest tests.test_trimmed_average
+python3 -m unittest tests.test_stream_coverage
+python3 -m unittest tests.test_formatting
+python3 -m unittest tests.test_examples_cache
 ```
 
 Each individual test method prints a short "passed" line after all of its assertions
