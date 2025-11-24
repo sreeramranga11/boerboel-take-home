@@ -19,7 +19,7 @@ class FormattingTests(unittest.TestCase):
         example_path = Path(__file__).resolve().parent.parent / "inputs" / "example-2.txt"
         with example_path.open("r", encoding="utf-8") as handle:
             result = subprocess.run(
-                ["python", "trimmed_average.py"],
+                ["python3", "trimmed_average.py"],
                 stdin=handle,
                 text=True,
                 capture_output=True,
