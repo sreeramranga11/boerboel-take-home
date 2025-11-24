@@ -4,6 +4,8 @@ from __future__ import annotations
 import base64
 import bisect
 import math
+import os
+from pathlib import Path
 import struct
 import sys
 from collections import deque
@@ -200,11 +202,40 @@ def format_output(index: int, avg: float) -> str:
     return f"{index:7d}: {value_text}"
 
 
+def save_outputs(outputs: List[str]) -> Path:
+    """Persist the most recent run into the outputs directory.
+
+    The caller does not need to pass the input file name; when stdin comes
+    from a redirected file we can discover it via /proc. If discovery fails,
+    we fall back to a generic "last-run" filename so there is always a cache
+    to inspect.
+    """
+
+    target_dir = Path("outputs")
+    target_dir.mkdir(exist_ok=True)
+
+    try:
+        # When stdin is redirected from a real file we can resolve its path.
+        source_path = Path(os.readlink("/proc/self/fd/0"))
+        if source_path.exists() and source_path.is_file():
+            source_name = source_path.stem or "last-run"
+        else:
+            source_name = "last-run"
+    except OSError:
+        source_name = "last-run"
+
+    target_path = target_dir / f"{source_name}.out"
+    target_path.write_text("\n".join(outputs) + "\n", encoding="utf-8")
+    return target_path
+
+
 def main() -> None:
     raw_stream = decode_input_lines(sys.stdin)
     state = TrimState()
-    for line in parse_stream(raw_stream, state):
+    outputs = parse_stream(raw_stream, state)
+    for line in outputs:
         print(line)
+    save_outputs(outputs)
 
 
 if __name__ == "__main__":
