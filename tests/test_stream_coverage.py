@@ -14,14 +14,14 @@ def build_stream_with_opcode(opcode: int, payload: bytes = b"") -> bytes:
 
 class StreamCoverageTests(unittest.TestCase):
     def test_truncated_stream_raises_value_error(self):
-        # Missing the payload for a SLAT instruction should raise immediately.
+        # Missing the payload 
         raw = build_stream_with_opcode(0x01)
         with self.assertRaises(ValueError):
             ta.parse_stream(raw, ta.TrimState())
         print("test_stream_coverage.test_truncated_stream_raises_value_error passed")
 
     def test_large_window_and_trim_combo(self):
-        # Build a stream that mixes absolute and proportional trims to stretch logic paths.
+        # Build a stream that mixes absolute and proportional trims 
         payload = b"".join(
             [
                 build_stream_with_opcode(0x05, (6).to_bytes(4, "big")),  # window size 6
@@ -37,14 +37,14 @@ class StreamCoverageTests(unittest.TestCase):
         )
         outputs = ta.parse_stream(payload, ta.TrimState())
         self.assertEqual(len(outputs), 1)
-        # Trim drops the two smallest and two largest values => average of 30 and 40.
+        # Trim drops the two smallest and two largest values => average of 30 and 40
         index, avg_text = outputs[0].split(":")
         self.assertEqual(index.strip(), "6")
         self.assertTrue(math.isclose(float(avg_text.strip()), 35.0, rel_tol=1e-9))
         print("test_stream_coverage.test_large_window_and_trim_combo passed")
 
     def test_main_via_subprocess_reports_nan_on_over_trim(self):
-        # Feed a stream that over-trims so compute_trimmed_average returns NaN.
+        # Feed a stream that over-trims. returns NaN
         raw_stream = b"".join(
             [
                 build_stream_with_opcode(0x05, (2).to_bytes(4, "big")),
@@ -62,7 +62,6 @@ class StreamCoverageTests(unittest.TestCase):
         )
         lines = [line for line in process.stdout.splitlines() if line.strip()]
         self.assertEqual(len(lines), 1)
-        # Human-readable output should spell NaN, not numeric text.
         self.assertTrue(lines[0].endswith("NaN"))
         print("test_stream_coverage.test_main_via_subprocess_reports_nan_on_over_trim passed")
 

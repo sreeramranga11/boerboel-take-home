@@ -12,7 +12,7 @@ from collections import deque
 from typing import Iterable, List, Sequence, Tuple
 
 
-# Opcodes are kept near the top so they are easy to eyeball while reading the spec.
+# Opcodes
 RESET = 0x00
 SET_LOWER_ABS = 0x01
 SET_UPPER_ABS = 0x02
@@ -23,25 +23,24 @@ ADD_SAMPLES = 0x10
 
 
 class TrimState:
-    """Holds the mutable state for the rolling calculation."""
 
     def __init__(self, window_size: int = 0, lower_abs: int = 0, upper_abs: int = 0,
                  lower_prop: int = 0, upper_prop: int = 0) -> None:
-        # Window and trim configuration.
+        # Window and trim config
         self.window_size = window_size
         self.lower_abs = lower_abs
         self.upper_abs = upper_abs
         self.lower_prop = lower_prop
         self.upper_prop = upper_prop
 
-        # Data that shifts as new samples arrive.
+        # Data that shifts as new samples arrive
         self.samples: deque[float] = deque()
         self.sorted_samples: List[float] = []
         self.total_sum: float = 0.0
         self.samples_seen: int = 0
 
     def reset_samples(self) -> None:
-        # This is called both by explicit RESET and whenever any trim setting changes.
+        # This is called both by explicit RESET and whenever any trim setting changes
         self.samples.clear()
         self.sorted_samples.clear()
         self.total_sum = 0.0
@@ -73,7 +72,7 @@ class TrimState:
             self.reset_samples()
 
     def add_samples(self, samples: Sequence[float]) -> List[Tuple[int, float]]:
-        """Insert samples, trimming any overflow, and return outputs that completed windows."""
+        """Insert samples, trimming any overflow, and return outputs that completed windows"""
         outputs: List[Tuple[int, float]] = []
         for sample in samples:
             self.samples_seen += 1
@@ -81,29 +80,29 @@ class TrimState:
             bisect.insort(self.sorted_samples, sample)
             self.total_sum += sample
 
-            # If the window is too big, pop from both trackers.
+            # If the window is too big, pop from both trackers
             if self.window_size > 0 and len(self.samples) > self.window_size:
                 removed = self.samples.popleft()
                 self.total_sum -= removed
                 idx = bisect.bisect_left(self.sorted_samples, removed)
                 del self.sorted_samples[idx]
 
-            # Only compute when the window is fully populated.
+            # Only compute when the window is fully populated
             if self.window_size > 0 and len(self.samples) == self.window_size:
                 outputs.append((self.samples_seen, self.compute_trimmed_average()))
         return outputs
 
     def compute_trimmed_average(self) -> float:
-        # Guard against uninitialized state.
+        # Guard against uninitialized state
         if self.window_size == 0 or len(self.sorted_samples) < self.window_size:
             return math.nan
 
         n = self.window_size
-        # The assignment says to pick the bigger trim between absolute and proportional.
+        # assignment says to pick the bigger trim between absolute and proportional
         low_trim = max(self.lower_abs, math.ceil(self.lower_prop * n / 100))
         high_trim = max(self.upper_abs, math.ceil(self.upper_prop * n / 100))
 
-        # If everything gets trimmed away, we return NaN so the caller can print it.
+        # If everything gets trimmed away, return NaN
         if low_trim + high_trim >= n:
             return math.nan
 
@@ -118,12 +117,12 @@ class TrimState:
 
 
 def decode_input_lines(lines: Iterable[str]) -> bytes:
-    """Turn the text input into one continuous bytes object."""
+    """Turn the text input into one continuous bytes object"""
     chunks: List[bytes] = []
     for raw_line in lines:
         stripped = raw_line.strip()
         if not stripped or stripped.startswith("#"):
-            # Skip comments and blank lines to match the exercise format.
+            # Skip comments and blank lines to match the exercise format
             continue
 
         padding_len = (-len(stripped)) % 4
@@ -133,7 +132,7 @@ def decode_input_lines(lines: Iterable[str]) -> bytes:
 
 
 def parse_stream(raw: bytes, state: TrimState) -> List[str]:
-    """Walk over the raw bytes and collect formatted outputs."""
+    """Walk over the raw bytes and collect formatted outputs"""
     outputs: List[str] = []
     idx = 0
     length = len(raw)
@@ -194,7 +193,7 @@ def parse_stream(raw: bytes, state: TrimState) -> List[str]:
 
 
 def format_output(index: int, avg: float) -> str:
-    # Using NaN text keeps downstream consumers from mistaking it for a real number.
+    # Using NaN text keeps downstream consumers from mistaking it for a real number
     if math.isnan(avg):
         value_text = "NaN"
     else:
@@ -203,22 +202,15 @@ def format_output(index: int, avg: float) -> str:
 
 
 def _discover_input_name(stdin_text: str | None = None) -> str:
-    """Try a handful of platform-friendly tricks to name the cache file.
-
-    On Linux the `/proc` symlink will resolve when stdin is redirected from a file, but
-    macOS and some CI environments do not expose `/proc`. We fall back to `/dev/fd/0`
-    (common on macOS) and then to comparing the current stdin contents to any files in
-    the `inputs/` directory so example runs still produce example-matching cache names.
-    """
 
     candidate_paths = []
 
-    # First try whatever name Python knows about stdin when it is a file handle.
+    # First try whatever name Python knows about stdin when it is a file handle
     stdin_name = getattr(sys.stdin, "name", None)
     if stdin_name and stdin_name not in {"<stdin>", "stdin"}:
         candidate_paths.append(stdin_name)
 
-    # Then try the common file descriptor symlink locations.
+    # Then try the common file descriptor symlink locations
     for link in ("/proc/self/fd/0", "/dev/fd/0"):
         try:
             candidate_paths.append(os.readlink(link))
@@ -230,7 +222,7 @@ def _discover_input_name(stdin_text: str | None = None) -> str:
         if path.exists() and path.is_file():
             return path.stem or "last-run"
 
-    # If we could not resolve a path, try to match stdin against known example files.
+    # If we could not resolve a path, try to match stdin against known example files
     if stdin_text is not None:
         inputs_dir = Path("inputs")
         for input_file in inputs_dir.glob("*.txt"):
@@ -238,14 +230,14 @@ def _discover_input_name(stdin_text: str | None = None) -> str:
                 if input_file.read_text(encoding="utf-8") == stdin_text:
                     return input_file.stem
             except OSError:
-                # Keep looking; one bad file should not stop discovery.
+                # Keep looking
                 continue
 
     return "last-run"
 
 
 def save_outputs(outputs: List[str], stdin_text: str | None = None) -> Path:
-    """Persist the most recent run into the outputs directory with a best-effort name."""
+    """The most recent run into the outputs directory with a best-effort name"""
 
     target_dir = Path("outputs")
     target_dir.mkdir(exist_ok=True)

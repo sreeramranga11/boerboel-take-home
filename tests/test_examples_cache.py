@@ -43,8 +43,6 @@ class ExampleCacheTests(unittest.TestCase):
     def test_example_three_matches_expected_and_caches(self):
         stdout_lines, cached_lines = self.run_example_and_collect("example-3.txt")
         expected_lines = self.build_expected_lines("example-3.txt")
-        # Spot check both the early and late windows to keep things readable while
-        # ensuring we exercised the big stream.
         self.assertGreater(len(expected_lines), 10)
         self.assertEqual(stdout_lines[:5], expected_lines[:5])
         self.assertEqual(stdout_lines[-5:], expected_lines[-5:])
